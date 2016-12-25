@@ -1,0 +1,141 @@
+{% extends 'master' %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-12">
+    <div class="row">
+      <div class="col-md-12">
+        <div class="panel panel-success">
+          <div class="panel-heading">
+            <h4>Datos</h4>
+          </div>
+          <div class="panel-body">
+            <dl class="dl-horizontal">
+              <dt>Id</dt>
+              <dd><span id="id"></span></dd>
+              <dt>Ip</dt>
+              <dd><span id="ip"> {{ ip }} </span></dd>
+              <dt>Puerto</dt>
+              <dd><span id="puerto"> {{ puerto }} </span></dd>
+            </dl>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <div class="panel panel-success">
+          <div class="panel-heading">
+            <h4>Archivos</h4>
+          </div>
+          <table id="archivos" class="table">
+            <tbody>
+              <tr>
+                  <th>Nombre</td>
+                  <th>Hash</td>
+              </tr>
+              {% for archivo in archivos %}
+              <tr>
+                <td>{{ archivo.nombre }}</td>
+                <td>{{ archivo.hash }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="panel panel-success">
+          <div class="panel-heading">
+            <h4>Pares Conectados</h4>
+          </div>
+          <table id="pares" class="table">
+            <tbody>
+              <tr>
+                  <th>Ip</td>
+                  <th>Puerto</td>
+                  <th>Catalogo Conectado</td>
+              </tr>
+              {% for par in pares %}
+              <tr>
+                <td>{{ par.ip }}</td>
+                <td>{{ par.puerto }}</td>
+                <td>{{ par.catalogo_conectado}}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="panel panel-success">
+      <div class="panel-heading">
+        <h4>Otros catálogos</h4>
+      </div>
+      <div class="panel-body">
+        <button type="button" class="btn btn-primary" onclick="getAllOthersCatalogos()">Buscar otros catálogos</button>
+      </div>
+      <table id="resultAllOthersCatalogos" class="table">
+        <thead>
+          <tr>
+            <td>Socket id</td>
+            <td>Cantidad Conexiones</td>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+
+//Catalogo
+var socket = io.connect('/catalogo');
+
+socket.emit('getId',function(id){
+    $('#id').text(id);
+});
+
+socket.on('agregarArchivo',function(result){
+    $('#archivos tr:last').after('<tr><td>'+result.nombre+'</td><td>'+result.hash+'</td></tr>');
+});
+
+socket.on('agregarArchivosReplicados',function(result){
+  $('#archivos tbody').empty();
+  $.each(result,function(index, archivos){
+    $('#archivos tr:last').after('<tr><td>'+archivos.nombre+'</td><td>'+archivos.hash+'</td></tr>');
+  });
+});
+
+socket.on('agregarPar',function(par){
+  $('#pares tr:last').after('<tr id='+par.ip+'><td>'+par.ip+'</td><td>'+par.puerto+'</td><td>'+par.catalogo_conectado+'</td></tr>');
+});
+
+socket.on('agregarParesReplicados',function(result){
+  $('#pares tbody').empty();
+  $.each(result,function(index, pares){
+    $('#pares tr:last').after('<tr id='+pares.ip+'><td>'+pares.ip+'</td><td>'+pares.puerto+'</td><td>'+pares.catalogo_conectado+'</td></tr>');
+  });
+});
+
+socket.on('eliminarPar',function(parIp){
+  $('[id="'+parIp+'"]').remove();
+});
+
+function getAllOthersCatalogos(){
+  socket.emit('getAllOthersCatalogosVista', function (result) {
+    $('#resultAllOthersCatalogos tbody').empty();
+    $.each(result,function(index,catalogo){
+      $('#resultAllOthersCatalogos > tbody:last-child').append('<tr><td>'+catalogo.socket_id+'</td><td>'+catalogo.cantidad_conexiones+'</td></tr>');
+    });
+  });
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,132 @@
+{% extends 'master' %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-success">
+              <div class="panel-body">
+                <dl class="dl-horizontal">
+                  <div class="form-group">
+                    <label for="estado">Estado:</label>
+                    <label id="estado"></label>
+                  </div>
+                </dl>
+                <button type="button" class="btn" onclick="conectar()">Conectar</button>
+                <button type="button" class="btn" onclick="desconectar()">Desconectar</button>
+              </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-success">
+              <div class="panel-heading">
+                <h4>Nuevo archivo</h4>
+              </div>
+              <div class="panel-body">
+                <dl class="dl-horizontal">
+                  <div class="form-group">
+                    <label for="nombre">Nombre:</label>
+                    <input type="text" class="form-control" id="nombre">
+                  </div>
+                  <div class="form-group">
+                    <label for="size">Size:</label>
+                    <input type="text" class="form-control" id="size">
+                  </div>
+                  <div class="form-group">
+                    <label for="hash">Hash:</label>
+                    <input type="text" class="form-control" id="hash">
+                  </div>
+                </dl>
+                <button type="button" class="btn" onclick="enviarArchivo()">Enviar</button>
+              </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="panel panel-success">
+              <div class="panel-heading">
+                <h4>Buscar archivo</h4>
+              </div>
+              <div class="panel-body">
+                <dl class="dl-horizontal">
+                  <div class="form-group">
+                    <label for="buscarArchivo">Nombre:</label>
+                    <input type="text" class="form-control" id="buscarArchivo">
+                  </div>
+                </dl>
+                <button type="button" class="btn" onclick="buscarArchivo()">Buscar</button>
+                <table id="listadoPares" class="table">
+                  <tbody>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+{% block scripts %}
+{{ super() }}
+<script>
+
+socket = io.connect('/par');
+eventos();
+
+socket.emit('parConectado');
+
+function eventos() {
+  socket.on('conectado', function(){
+    $('#estado').text('Conectado');
+  });
+
+  socket.on('desconectado', function(){
+    desconectar();
+  });
+
+  socket.on('archivoEncontrado', function(result){
+      $('#listadoPares tbody').empty();
+      $.each(result,function(index,archivo){
+        $('#listadoPares > tbody:last-child').append('<tr><th>Nombre:</th><th>Size:</th><th>Peers:</th><th>Id:</th></tr>');
+        $('#listadoPares > tbody:last-child').append('<tr><td>'+archivo.nombre+'</td><td>'+archivo.size+'</td><td>'+archivo.peers+'</td><td>'+archivo.id+'</td><td><button type="button" class="btn" onclick="getParesArchivo('+archivo.id+')">Obtener Pares</button></td></tr>');
+      });
+  });
+
+  socket.on('listadoPares', function(result){
+      $('#listadoPares tbody').empty();
+      $.each(result,function(index,par){
+          $('#listadoPares > tbody:last-child').append('<tr><th>IP:</th><th>Puerto:</th></tr>');
+          $('#listadoPares > tbody:last-child').append('<tr><td>'+par.ip+'</td><td>'+par.puerto+'</td></tr>');
+      });
+  });
+}
+
+function conectar() {
+  socket.io.disconnect();
+  socket = io.connect('/par',{'forceNew': true });
+  eventos();
+  socket.emit('parConectado');
+}
+
+function desconectar() {
+  socket.io.disconnect();
+  $('#estado').text('Desconectado');
+}
+
+function enviarArchivo() {
+  socket.emit('nuevoArchivo',
+    {
+      nombre:$('#nombre').val(),
+      size:$('#size').val(),
+      hash:$('#hash').val()
+    });
+};
+
+function buscarArchivo() {
+  socket.emit('buscarArchivo', $('#buscarArchivo').val());
+};
+
+function getParesArchivo(hash) {
+  socket.emit('getParesArchivo', hash);
+};
+
+</script>
+{% endblock %}
