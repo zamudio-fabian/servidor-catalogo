@@ -21,7 +21,11 @@ var balanceadorSocket;
 var CatalogoController = Ioc.make('App/Http/Controllers/CatalogoController')
 var ParController = Ioc.make('App/Http/Controllers/ParController')
 
-ParController.deleteAllPares();
+
+co(function * () {
+    yield ParController.truncateAll();
+})
+
 
 /**
 |------------------------------------------------------------------------

@@ -10,8 +10,10 @@ class ParController {
       yield response.sendView('par.index')
   }
 
-  * deleteAllPares (request, response) {
-      yield Database.truncate('pares');
+  * truncateAll () {
+      yield Database.table('archivo_par').delete()
+      yield Database.table('pares').delete()
+      yield Database.table('archivos').delete()
   }
 
   * nuevaConexion (ip, puerto, catalogo){
