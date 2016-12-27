@@ -220,6 +220,7 @@ module.exports = function (server) {
         co(function * () {
           result = yield CatalogoController.getParesArchivo(id);
           socket.emit('listadoPares', result);
+          log.info(result);
         })
         .catch(console.error);
       });

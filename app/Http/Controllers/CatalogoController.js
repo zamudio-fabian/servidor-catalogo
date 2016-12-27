@@ -112,6 +112,7 @@ class CatalogoController {
         }
         archivo.nombre = archivosBuscados[i].nombre
         archivo.size = archivosBuscados[i].size
+        archivo.hash = archivosBuscados[i].hash
         archivo.peers = peers
         archivo.id = archivosBuscados[i].id
         result.push(archivo)
