@@ -33,11 +33,14 @@
               <tr>
                   <th>Nombre</td>
                   <th>Hash</td>
+                  <th>Size</th>
               </tr>
               {% for archivo in archivos %}
               <tr>
                 <td>{{ archivo.nombre }}</td>
                 <td>{{ archivo.hash }}</td>
+                <td>{{ archivo.size }}</td>
+
               </tr>
               {% endfor %}
             </tbody>
