@@ -27,3 +27,6 @@ lib-cov
 
 #Database
 database/development.sqlite
+
+#Config balanceadores
+config/balanceadores.js
