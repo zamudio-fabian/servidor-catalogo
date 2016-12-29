@@ -9,7 +9,6 @@ class ParesTableSchema extends Schema {
       table.increments()
       table.string('ip').unique()
       table.integer('puerto')
-      table.boolean('online')
       table.string('catalogo_conectado')
       table.timestamps()
     })

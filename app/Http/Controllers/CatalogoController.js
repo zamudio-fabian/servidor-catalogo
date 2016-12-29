@@ -9,10 +9,7 @@ class CatalogoController {
 
   * index (request, response) {
     const archivos = yield Archivo.all()
-    const pares = yield Par
-      .query()
-      .where('online', 1)
-      .fetch()
+    const pares = yield Par.all()
     yield response.sendView('catalogo.index', {
         archivos: archivos.toJSON(),
         pares: pares.toJSON(),
@@ -54,6 +51,20 @@ class CatalogoController {
       }
     }
   }
+
+  * eliminarArchivo (ip, hash){
+    const archivo  = yield Archivo.findBy('hash', hash)
+    const par  = yield Par.findBy('ip', ip)
+    var idPar = [par.id]
+    if (archivo != null) {
+      yield archivo.pares().detach(idPar)
+      return true
+    }
+    else {
+      return false
+    }
+  }
+
 
   * replicacionDb(pares, archivos, archivoPar){
     yield Database.transaction(function * (trx) {
@@ -102,20 +113,14 @@ class CatalogoController {
       var result = []
       for (var i in archivosBuscados) {
         var archivo = new Object()
-        const archivoAux = yield Archivo.find(archivosBuscados[i].id)
-        var peers = 0
-        var pares = (yield archivoAux.pares().fetch()).toJSON();
-        for (var j in pares) {
-          if (pares[j].online == 1) {
-            peers++
-          }
-        }
         archivo.nombre = archivosBuscados[i].nombre
         archivo.size = archivosBuscados[i].size
         archivo.hash = archivosBuscados[i].hash
-        archivo.peers = peers
+        archivo.peers = yield this.getPeersArchivo(archivosBuscados[i].id)
         archivo.id = archivosBuscados[i].id
-        result.push(archivo)
+        if (archivo.peers > 0) {
+          result.push(archivo)
+        }
       }
       return result
     }
@@ -128,14 +133,27 @@ class CatalogoController {
     var result = []
     const archivoBuscado = yield Archivo.find(id)
     const pares = (yield archivoBuscado.pares().fetch()).toJSON();
-    for (var i in pares) {
-      if (pares[i].online == 1) {
+    if (pares.length > 0) {
+      for (var i in pares) {
         var par = new Object()
         par.ip = pares[i].ip
         result.push(par)
       }
+      return result
     }
-    return result
+    else {
+      return null
+    }
+  }
+
+  * getPeersArchivo (id){
+    const archivo = yield Archivo.find(id)
+    var peers = 0
+    var pares = (yield archivo.pares().fetch()).toJSON();
+    for (var j in pares) {
+      peers++
+    }
+    return peers
   }
 
 }

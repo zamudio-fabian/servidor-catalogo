@@ -43,7 +43,7 @@ log.on("log",function(error,record,handler){
 module.exports = function (server) {
 
     const io = use('socket.io')(server);
-    
+
 
     //Salas
     var catalogoRoom = io.of('/catalogo');
@@ -183,7 +183,7 @@ module.exports = function (server) {
           if (result == 0 || result == 1) {
             if (result == 0) {
               log.info('Nuevo Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
-              catalogoRoom.emit('agregarArchivo',archivo);
+              catalogoRoom.emit('nuevoArchivoVista',archivo);
             }
             if (result == 1) {
               log.info('Nuevo Par para Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
@@ -203,12 +203,33 @@ module.exports = function (server) {
         .catch(console.error);
       });
 
+      socket.on('eliminarArchivo', function(hash){
+        var result;
+        var ip = socket.request.connection.remoteAddress;
+        co(function * () {
+          result = yield CatalogoController.eliminarArchivo(ip, hash);
+          if (result) {
+            log.info('Eliminar Archivo - IP:'+ip+' Hash:'+hash);
+            getOtrosCatalogos(function(otrosCatalogos) {
+              for (var i in otrosCatalogos) {
+                var otroCatalogoSocket = client.connect('http://'+otrosCatalogos[i].ip+':'+Env.get('PORT')+'/otrosCatalogos');
+                otroCatalogoSocket.emit('replicacionEliminarArchivo', ip, hash);
+                log.info('Replicación eliminar archivo - IP:'+ip+' Hash:'+hash);
+              }
+            });
+          }
+          else {
+            log.err('Eliminar Archivo Inexsistente - IP:'+ip+' Hash:'+hash);
+          }
+        })
+        .catch(console.error);
+      });
+
       socket.on('buscarArchivo', function(archivo){
         log.info('Busqueda de archivo - IP:'+socket.request.connection.remoteAddress+' Nombre:'+archivo);
-        var result
+        var result;
         co(function * () {
           result = yield CatalogoController.buscarArchivo(archivo);
-          
           socket.emit('archivoEncontrado', result);
         })
         .catch(console.error);
@@ -280,14 +301,22 @@ module.exports = function (server) {
           if (result == 0 || result == 1) {
             if (result == 0) {
               log.info('Nuevo Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
-              catalogoRoom.emit('agregarArchivo',archivo);
+              catalogoRoom.emit('nuevoArchivoVista',archivo);
             }
             if (result == 1) {
               log.info('Nuevo Par para Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
             }
           }
-          else {
-            log.err('Par existente para Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
+        })
+        .catch(console.error);
+      });
+
+      socket.on('replicacionEliminarArchivo', function(ip, hash){
+        var result
+        co(function * () {
+          result = yield CatalogoController.eliminarArchivo(ip, hash);
+          if (result) {
+            log.info('Eliminar Archivo - IP:'+ip+' Hash:'+hash);
           }
         })
         .catch(console.error);

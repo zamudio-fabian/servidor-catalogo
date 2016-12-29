@@ -22,17 +22,9 @@ class ParController {
     if(par == null) {
       instanciaPar.ip = ip
       instanciaPar.puerto = puerto
-      instanciaPar.online = 1
       instanciaPar.catalogo_conectado = catalogo
       yield instanciaPar.save()
       return instanciaPar
-    }
-    else {
-      par.puerto = puerto
-      par.online = 1
-      par.catalogo_conectado = catalogo
-      yield par.save();
-      return par
     }
   }
 
@@ -44,7 +36,7 @@ class ParController {
   * getCantidadParesConectados (){
     const paresConectados = yield Database
       .from('pares')
-      .where({ online: 1 , catalogo_conectado:Env.get('HOST')})
+      .where('catalogo_conectado', Env.get('HOST'))
       .count()
     return paresConectados[0]['count(*)']
   }

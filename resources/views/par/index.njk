@@ -34,8 +34,8 @@
                     <input type="text" class="form-control" id="size">
                   </div>
                   <div class="form-group">
-                    <label for="hash">Hash:</label>
-                    <input type="text" class="form-control" id="hash">
+                    <label for="nuevoHash">Hash:</label>
+                    <input type="text" class="form-control" id="nuevoHash">
                   </div>
                 </dl>
                 <button type="button" class="btn" onclick="enviarArchivo()">Enviar</button>
@@ -59,6 +59,24 @@
                   <tbody>
                   </tbody>
                 </table>
+              </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="panel panel-success">
+              <div class="panel-heading">
+                <h4>Eliminar archivo</h4>
+              </div>
+              <div class="panel-body">
+                <dl class="dl-horizontal">
+                  <div class="form-group">
+                    <label for="eliminarHash">Hash:</label>
+                    <input type="text" class="form-control" id="eliminarHash">
+                  </div>
+                </dl>
+                <button type="button" class="btn" onclick="eliminarArchivo()">Eliminar</button>
               </div>
             </div>
         </div>
@@ -93,8 +111,8 @@ function eventos() {
   socket.on('listadoPares', function(result){
       $('#listadoPares tbody').empty();
       $.each(result,function(index,par){
-          $('#listadoPares > tbody:last-child').append('<tr><th>IP:</th><th>Puerto:</th></tr>');
-          $('#listadoPares > tbody:last-child').append('<tr><td>'+par.ip+'</td><td>'+par.puerto+'</td></tr>');
+          $('#listadoPares > tbody:last-child').append('<tr><th>IP:</th></tr>');
+          $('#listadoPares > tbody:last-child').append('<tr><td>'+par.ip+'</td></tr>');
       });
   });
 }
@@ -116,9 +134,14 @@ function enviarArchivo() {
     {
       nombre:$('#nombre').val(),
       size:$('#size').val(),
-      hash:$('#hash').val()
+      hash:$('#nuevoHash').val()
     });
 };
+
+function eliminarArchivo() {
+  socket.emit('eliminarArchivo', $('#eliminarHash').val());
+};
+
 
 function buscarArchivo() {
   socket.emit('buscarArchivo', $('#buscarArchivo').val());
