@@ -1,4 +1,4 @@
-# Catálogo
+﻿# Catálogo
 
 #### Propósito
 
@@ -20,7 +20,7 @@ Como parte fundamental del proyecto es necesario tener instalado NodeJs (https:/
 #### Instalación
 
 ```sh
-$ git clone git@github.com:rafaalderete/Catalogo.git
+$ git clone git@github.com:zamudio-fabian/servidor-catalogo.git
 $ cd Catalogo
 $ npm install
 $ touch .env
