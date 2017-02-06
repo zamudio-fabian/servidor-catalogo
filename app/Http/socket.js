@@ -144,6 +144,15 @@ module.exports = function (server) {
         });
       });
 
+      socket.on('getPeersArchivoVista', function(hash, callback){
+        var result;
+        co(function * () {
+          result = yield CatalogoController.getParesArchivo(hash);
+          callback(result);
+        })
+        .catch(console.error);
+      });
+
     });
 
     /**
@@ -208,8 +217,11 @@ module.exports = function (server) {
         var ip = socket.request.connection.remoteAddress;
         co(function * () {
           result = yield CatalogoController.eliminarArchivo(ip, hash);
-          if (result) {
+          if (result != 0) {
             log.info('Eliminar Archivo - IP:'+ip+' Hash:'+hash);
+            if (result == 1) {
+              catalogoRoom.emit('eliminarArchivoVista',hash);
+            }
             getOtrosCatalogos(function(otrosCatalogos) {
               for (var i in otrosCatalogos) {
                 var otroCatalogoSocket = client.connect('http://'+otrosCatalogos[i].ip+':'+Env.get('PORT')+'/otrosCatalogos');
@@ -250,9 +262,12 @@ module.exports = function (server) {
         var ip = socket.request.connection.remoteAddress;
         co(function * () {
           log.info('Desconexión par - IP:'+ip);
-          yield ParController.desconexion(ip);
+          var result = yield CatalogoController.desconexionPar(ip);
           catalogoRoom.emit('eliminarPar', ip);
           balanceadorSocket.emit('removeParToCatalogo');
+          for (var i in result) {
+            catalogoRoom.emit('eliminarArchivoVista',result[i]);
+          }
           getOtrosCatalogos(function(otrosCatalogos) {
             for (var i in otrosCatalogos) {
               var otroCatalogoSocket = client.connect('http://'+otrosCatalogos[i].ip+':'+Env.get('PORT')+'/otrosCatalogos');
@@ -315,8 +330,11 @@ module.exports = function (server) {
         var result
         co(function * () {
           result = yield CatalogoController.eliminarArchivo(ip, hash);
-          if (result) {
+          if (result != 0) {
             log.info('Eliminar Archivo - IP:'+ip+' Hash:'+hash);
+            if (result == 1) {
+              catalogoRoom.emit('eliminarArchivoVista',hash);
+            }
           }
         })
         .catch(console.error);
@@ -325,8 +343,11 @@ module.exports = function (server) {
       socket.on('replicacionParDesconectado', function(ip){
         log.info('Desconexión par replicada- IP:'+ip+' de Catálogo:'+socket.request.connection.remoteAddress);
         co(function * () {
-          yield ParController.desconexion(ip);
+          var result = yield CatalogoController.desconexionPar(ip);
           catalogoRoom.emit('eliminarPar', ip);
+          for (var i in result) {
+            catalogoRoom.emit('eliminarArchivoVista',result[i]);
+          }
         })
         .catch(console.error);
       });

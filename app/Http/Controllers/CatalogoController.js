@@ -58,10 +58,17 @@ class CatalogoController {
     var idPar = [par.id]
     if (archivo != null) {
       yield archivo.pares().detach(idPar)
-      return true
+      var peers = yield this.getCantidadPeersArchivo(archivo.id)
+      if (peers == 0) {
+        yield archivo.delete()
+        return 1
+      }
+      else {
+        return 2
+      }
     }
     else {
-      return false
+      return 0
     }
   }
 
@@ -77,7 +84,6 @@ class CatalogoController {
       for (var i in pares) {
         yield trx.insert({ip: pares[i].ip,
           puerto: pares[i].puerto,
-          online: pares[i].online,
           catalogo_conectado: pares[i].catalogo_conectado})
           .into('pares')
       }
@@ -116,7 +122,7 @@ class CatalogoController {
         archivo.nombre = archivosBuscados[i].nombre
         archivo.size = archivosBuscados[i].size
         archivo.hash = archivosBuscados[i].hash
-        archivo.peers = yield this.getPeersArchivo(archivosBuscados[i].id)
+        archivo.peers = yield this.getCantidadPeersArchivo(archivosBuscados[i].id)
         archivo.id = archivosBuscados[i].id
         if (archivo.peers > 0) {
           result.push(archivo)
@@ -129,9 +135,9 @@ class CatalogoController {
     }
   }
 
-  * getParesArchivo (id){
+  * getParesArchivo (hash){
     var result = []
-    const archivoBuscado = yield Archivo.find(id)
+    const archivoBuscado = yield Archivo.findBy('hash', hash)
     const pares = (yield archivoBuscado.pares().fetch()).toJSON();
     if (pares.length > 0) {
       for (var i in pares) {
@@ -146,7 +152,7 @@ class CatalogoController {
     }
   }
 
-  * getPeersArchivo (id){
+  * getCantidadPeersArchivo (id){
     const archivo = yield Archivo.find(id)
     var peers = 0
     var pares = (yield archivo.pares().fetch()).toJSON();
@@ -154,6 +160,30 @@ class CatalogoController {
       peers++
     }
     return peers
+  }
+
+  * desconexionPar (ip){
+    const instanciaPar = new Par()
+    const par = yield Par.findBy('ip', ip)
+    yield Database
+      .from('archivo_par')
+      .where('par_id', par.id)
+      .delete()
+    yield Database
+      .from('pares')
+      .where('ip', ip)
+      .delete()
+    var borrarArchivos = []
+    const archivos = (yield Archivo.all()).toJSON()
+    for (var i in archivos) {
+      var peers = yield this.getCantidadPeersArchivo(archivos[i].id)
+      if (peers == 0) {
+        borrarArchivos.push(archivos[i].hash)
+        const archivoNoPeers = yield Archivo.findBy('id', archivos[i].id)
+        yield archivoNoPeers.delete()
+      }
+    }
+    return borrarArchivos
   }
 
 }

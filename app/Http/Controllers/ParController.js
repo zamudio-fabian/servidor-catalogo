@@ -41,19 +41,6 @@ class ParController {
     return paresConectados[0]['count(*)']
   }
 
-  * desconexion (ip){
-    const instanciaPar = new Par()
-    const par = yield Par.findBy('ip', ip)
-    yield Database
-      .from('archivo_par')
-      .where('par_id', par.id)
-      .delete()
-
-    yield Database
-      .from('pares')
-      .where('ip', ip)
-      .delete()
-  }
 
 }
 

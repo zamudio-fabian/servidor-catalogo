@@ -104,7 +104,7 @@ function eventos() {
       $('#listadoPares tbody').empty();
       $.each(result,function(index,archivo){
         $('#listadoPares > tbody:last-child').append('<tr><th>Nombre:</th><th>Size:</th><th>Peers:</th><th>Id:</th></tr>');
-        $('#listadoPares > tbody:last-child').append('<tr><td>'+archivo.nombre+'</td><td>'+archivo.size+'</td><td>'+archivo.peers+'</td><td>'+archivo.id+'</td><td><button type="button" class="btn" onclick="getParesArchivo('+archivo.id+')">Obtener Pares</button></td></tr>');
+        $('#listadoPares > tbody:last-child').append('<tr><td>'+archivo.nombre+'</td><td>'+archivo.size+'</td><td>'+archivo.peers+'</td><td>'+archivo.id+'</td><td><button type="button" class="btn" onclick="getParesArchivo('+archivo.hash+')">Obtener Pares</button></td></tr>');
       });
   });
 
