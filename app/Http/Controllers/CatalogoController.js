@@ -164,6 +164,15 @@ class CatalogoController {
     
   }
 
+  * getArchivoByHash (hash){
+    const archivoBuscado = yield Archivo.findBy('hash', hash)
+    if(archivoBuscado != null){
+      return archivoBuscado;
+    }else{
+      return null
+    }
+  }
+
   * getCantidadPeersArchivo (id){
     const archivo = yield Archivo.find(id)
     var peers = 0

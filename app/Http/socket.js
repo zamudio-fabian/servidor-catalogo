@@ -250,9 +250,14 @@ module.exports = function (server) {
       socket.on('getParesArchivo', function(id){
         log.info('Pedido de pares de un archivo - IP:'+socket.request.connection.remoteAddress+' Id:'+id);
         var result;
+        var fileToFind;
         co(function * () {
+          console.log('Buscamos archivo');
+          fileToFind = yield CatalogoController.getArchivoByHash(id);
+          console.log('Buscamos pares');
           result = yield CatalogoController.getParesArchivo(id,socket.request.connection.remoteAddress);
-          socket.emit('listadoPares', result);
+          socket.emit('listadoPares', {peers:result,file:fileToFind});
+          log.info('Pares para archivo HASH='+id);
           log.info(result);
         })
         .catch(console.error);
