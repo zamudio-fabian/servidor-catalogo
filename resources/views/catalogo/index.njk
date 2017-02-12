@@ -23,7 +23,7 @@
       </div>
     </div>
     <div class="row">
-      <div class="col-md-6">
+      <div class="col-md-7">
         <div class="panel panel-success">
           <div class="panel-heading">
             <h4>Archivos</h4>
@@ -50,7 +50,7 @@
           </table>
         </div>
       </div>
-      <div class="col-md-6">
+      <div class="col-md-5">
         <div class="panel panel-success">
           <div class="panel-heading">
             <h4>Pares Conectados</h4>
@@ -63,7 +63,7 @@
                   <th>Catalogo Conectado</td>
               </tr>
               {% for par in pares %}
-              <tr>
+              <tr id="{{ par.ip }}">
                 <td>{{ par.ip }}</td>
                 <td>{{ par.puerto }}</td>
                 <td>{{ par.catalogo_conectado}}</td>
@@ -110,14 +110,14 @@ socket.emit('getId',function(id){
 });
 
 socket.on('nuevoArchivoVista',function(result){
-    $('#archivos tr:last').after('<tr id='+result.hash+'><td>'+result.nombre+'</td><td>'+result.hash+'</td><td>'+result.size+'</td><td><button type="button" class="btn btn-primary" onclick="mostrarPeers(\''+result.hash+'\')">Ver Peers</button></td></tr>');
+    $('#archivos tr:last').after('<tr id='+result.hash+'><td>'+result.nombre+'</td><td>'+result.hash+'</td><td>'+(result.size/(1024*1024)).toFixed(2)+' MB</td><td><button type="button" class="btn btn-primary" onclick="mostrarPeers(\''+result.hash+'\')">Ver Peers</button></td></tr>');
     $('#archivos tr:last').after('<tr id='+result.hash+'peers></tr>');
 });
 
 socket.on('agregarArchivosReplicados',function(result){
   $('#archivos tbody').empty();
   $.each(result,function(index, archivos){
-    $('#archivos tr:last').after('<tr id='+result.hash+'><td>'+archivos.nombre+'</td><td>'+archivos.hash+'</td><td>'+archivos.size+'</td><td><button type="button" class="btn btn-primary" onclick="mostrarPeers(\''+archivos.hash+'\')">Ver Peers</button></td></tr>');
+    $('#archivos tr:last').after('<tr id='+result.hash+'><td>'+archivos.nombre+'</td><td>'+archivos.hash+'</td><td>'+(result.size/(1024*1024)).toFixed(2)+' MB</td><td><button type="button" class="btn btn-primary" onclick="mostrarPeers(\''+archivos.hash+'\')">Ver Peers</button></td></tr>');
     $('#archivos tr:last').after('<tr id='+archivos.hash+'peers></tr>');
   });
 });
@@ -140,6 +140,10 @@ socket.on('agregarParesReplicados',function(result){
 
 socket.on('eliminarPar',function(parIp){
   $('[id="'+parIp+'"]').remove();
+});
+socket.on('eliminarArchivoVista',function(hash){
+  $('[id="'+hash+'"]').remove();
+  $('[id="'+hash+'peers"]').remove();
 });
 
 function getAllOthersCatalogos(){

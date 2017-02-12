@@ -6,9 +6,13 @@ const Database = use('Database')
 const Env = use('Env');
 
 class CatalogoController {
-
+  
   * index (request, response) {
     const archivos = yield Archivo.all()
+    archivos.forEach(function(archivo){
+      archivo.size = (archivo.size / (1024 * 1024)).toFixed(2);
+      archivo.size = archivo.size+' MB'
+    });
     const pares = yield Par.all()
     yield response.sendView('catalogo.index', {
         archivos: archivos.toJSON(),
@@ -138,18 +142,23 @@ class CatalogoController {
   * getParesArchivo (hash){
     var result = []
     const archivoBuscado = yield Archivo.findBy('hash', hash)
-    const pares = (yield archivoBuscado.pares().fetch()).toJSON();
-    if (pares.length > 0) {
-      for (var i in pares) {
-        var par = new Object()
-        par.ip = pares[i].ip
-        result.push(par)
-      }
-      return result
-    }
-    else {
+    if(archivoBuscado != null){
+      const pares = (yield archivoBuscado.pares().fetch()).toJSON();
+        if (pares.length > 0) {
+          for (var i in pares) {
+            var par = new Object()
+            par.ip = pares[i].ip
+            result.push(par)
+          }
+          return result
+        }
+        else {
+          return null
+        }
+    }else{
       return null
     }
+    
   }
 
   * getCantidadPeersArchivo (id){
