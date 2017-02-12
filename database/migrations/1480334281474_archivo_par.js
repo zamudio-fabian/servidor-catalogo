@@ -8,7 +8,7 @@ class ArchivoParTableSchema extends Schema {
     this.create('archivo_par', (table) => {
       table.increments()
       table.integer('archivo_id')
-      table.string('par_id')
+      table.integer('par_id')
       table.timestamps()
     })
   }

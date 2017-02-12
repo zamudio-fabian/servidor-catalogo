@@ -22,6 +22,19 @@ class CatalogoController {
     })
   }
 
+  * truncateFilesByPar (ip){
+    const par_id = yield Database
+      .select('id')
+      .from('pares')
+      .where('ip', ip)
+    const result = yield Database
+      .table('archivo_par')
+      .where('par_id', par_id[0].id)
+      .delete()
+      //Falta eliminar el archivo si la cantidad de pares relacionado
+      // es 0
+  }
+
   * nuevoArchivo (ip, archivo){
     const instanciaArchivo = new Archivo()
     const par = yield Database

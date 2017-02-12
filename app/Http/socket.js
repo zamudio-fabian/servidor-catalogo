@@ -212,6 +212,14 @@ module.exports = function (server) {
         .catch(console.error);
       });
 
+      socket.on('sendEliminarArchivosPorPar',function(){
+        var ip = socket.request.connection.remoteAddress;
+        co(function * () {
+          yield CatalogoController.truncateFilesByPar(ip);
+        })
+        .catch(console.error);
+      });
+
       socket.on('eliminarArchivo', function(hash){
         var result;
         var ip = socket.request.connection.remoteAddress;
