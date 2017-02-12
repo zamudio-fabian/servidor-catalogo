@@ -139,14 +139,15 @@ class CatalogoController {
     }
   }
 
-  * getParesArchivo (hash,ip_solicitante){
+  * getParesArchivo (hash,ip_solicitante = null){
     var result = []
     const archivoBuscado = yield Archivo.findBy('hash', hash)
     if(archivoBuscado != null){
       const pares = (yield archivoBuscado.pares().fetch()).toJSON();
         if (pares.length > 0) {
           for (var i in pares) {
-            if(pares[i].ip != ip_solicitante){
+            if(ip_solicitante==null || 
+              (ip_solicitante!=null && pares[i].ip != ip_solicitante)){
               var par = new Object()
               par.ip = pares[i].ip
               result.push(par)
