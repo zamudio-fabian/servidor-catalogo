@@ -251,7 +251,7 @@ module.exports = function (server) {
         log.info('Pedido de pares de un archivo - IP:'+socket.request.connection.remoteAddress+' Id:'+id);
         var result;
         co(function * () {
-          result = yield CatalogoController.getParesArchivo(id);
+          result = yield CatalogoController.getParesArchivo(id,socket.request.connection.remoteAddress);
           socket.emit('listadoPares', result);
           log.info(result);
         })

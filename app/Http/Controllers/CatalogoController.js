@@ -6,7 +6,7 @@ const Database = use('Database')
 const Env = use('Env');
 
 class CatalogoController {
-  
+
   * index (request, response) {
     const archivos = yield Archivo.all()
     archivos.forEach(function(archivo){
@@ -139,16 +139,18 @@ class CatalogoController {
     }
   }
 
-  * getParesArchivo (hash){
+  * getParesArchivo (hash,ip_solicitante){
     var result = []
     const archivoBuscado = yield Archivo.findBy('hash', hash)
     if(archivoBuscado != null){
       const pares = (yield archivoBuscado.pares().fetch()).toJSON();
         if (pares.length > 0) {
           for (var i in pares) {
-            var par = new Object()
-            par.ip = pares[i].ip
-            result.push(par)
+            if(pares[i].ip != ip_solicitante){
+              var par = new Object()
+              par.ip = pares[i].ip
+              result.push(par)
+            }
           }
           return result
         }
