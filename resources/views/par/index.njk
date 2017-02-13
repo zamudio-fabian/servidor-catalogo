@@ -63,24 +63,6 @@
             </div>
         </div>
     </div>
-    <div class="row">
-        <div class="col-md-6">
-            <div class="panel panel-success">
-              <div class="panel-heading">
-                <h4>Eliminar archivo</h4>
-              </div>
-              <div class="panel-body">
-                <dl class="dl-horizontal">
-                  <div class="form-group">
-                    <label for="eliminarHash">Hash:</label>
-                    <input type="text" class="form-control" id="eliminarHash">
-                  </div>
-                </dl>
-                <button type="button" class="btn" onclick="eliminarArchivo()">Eliminar</button>
-              </div>
-            </div>
-        </div>
-    </div>
 {% endblock %}
 {% block scripts %}
 {{ super() }}
@@ -110,7 +92,7 @@ function eventos() {
 
   socket.on('listadoPares', function(result){
       $('#listadoPares tbody').empty();
-      $.each(result,function(index,par){
+      $.each(result.peers,function(index,par){
           $('#listadoPares > tbody:last-child').append('<tr><th>IP:</th></tr>');
           $('#listadoPares > tbody:last-child').append('<tr><td>'+par.ip+'</td></tr>');
       });
@@ -136,10 +118,6 @@ function enviarArchivo() {
       size:$('#size').val(),
       hash:$('#nuevoHash').val()
     });
-};
-
-function eliminarArchivo() {
-  socket.emit('eliminarArchivo', $('#eliminarHash').val());
 };
 
 

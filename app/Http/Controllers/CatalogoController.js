@@ -22,26 +22,10 @@ class CatalogoController {
     })
   }
 
-  * truncateFilesByPar (ip){
-    const par_id = yield Database
-      .select('id')
-      .from('pares')
-      .where('ip', ip)
-    const result = yield Database
-      .table('archivo_par')
-      .where('par_id', par_id[0].id)
-      .delete()
-      //Falta eliminar el archivo si la cantidad de pares relacionado
-      // es 0
-  }
-
   * nuevoArchivo (ip, archivo){
     const instanciaArchivo = new Archivo()
-    const par = yield Database
-      .select('id')
-      .from('pares')
-      .where('ip', ip)
-    var idPar = [par[0].id]
+    const par = yield Par.findBy('ip', ip)
+    var idPar = [par.id]
     const archivoExistente = yield Archivo.findBy('hash', archivo.hash)
     if(archivoExistente == null) {
       instanciaArchivo.nombre = archivo.nombre
@@ -55,7 +39,7 @@ class CatalogoController {
       const pares = (yield archivoExistente.pares().fetch()).toJSON();
       var ban = false;
       for (var i in pares) {
-        if (pares[i].id == par[0].id) {
+        if (pares[i].id == par.id) {
           ban = true;
         }
       }
@@ -69,26 +53,25 @@ class CatalogoController {
     }
   }
 
-  * eliminarArchivo (ip, hash){
-    const archivo  = yield Archivo.findBy('hash', hash)
-    const par  = yield Par.findBy('ip', ip)
+  * truncateFilesByPar (ip){
+    const par = yield Par.findBy('ip', ip)
+    const archivosEliminarPar = yield Database
+      .select ('archivo_id')
+      .from('archivo_par')
+      .where('par_id', par.id)
     var idPar = [par.id]
-    if (archivo != null) {
+    var borrarArchivos = []
+    for (var i in archivosEliminarPar) {
+      var archivo = yield Archivo.findBy('id', archivosEliminarPar[i].archivo_id)
       yield archivo.pares().detach(idPar)
       var peers = yield this.getCantidadPeersArchivo(archivo.id)
       if (peers == 0) {
         yield archivo.delete()
-        return 1
-      }
-      else {
-        return 2
+        borrarArchivos.push(archivo.hash)
       }
     }
-    else {
-      return 0
-    }
+    return borrarArchivos
   }
-
 
   * replicacionDb(pares, archivos, archivoPar){
     yield Database.transaction(function * (trx) {
@@ -159,7 +142,7 @@ class CatalogoController {
       const pares = (yield archivoBuscado.pares().fetch()).toJSON();
         if (pares.length > 0) {
           for (var i in pares) {
-            if(ip_solicitante==null || 
+            if(ip_solicitante==null ||
               (ip_solicitante!=null && pares[i].ip != ip_solicitante)){
               var par = new Object()
               par.ip = pares[i].ip
@@ -174,7 +157,7 @@ class CatalogoController {
     }else{
       return null
     }
-    
+
   }
 
   * getArchivoByHash (hash){

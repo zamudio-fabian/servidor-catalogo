@@ -115,15 +115,15 @@ socket.emit('getId',function(id){
 });
 
 socket.on('nuevoArchivoVista',function(result){
-    $('#archivos tr:last').after('<tr id='+result.hash+'><td>'+result.nombre+'</td><td>'+result.hash+'</td><td>'+(result.size/(1024*1024)).toFixed(2)+' MB</td><td><button type="button" class="btn btn-primary" onclick="mostrarPeers(\''+result.hash+'\')">Ver Peers</button></td></tr>');
-    $('#archivos tr:last').after('<tr id='+result.hash+'peers></tr>');
+    $('#archivos > tbody > tr:last').after('<tr id='+result.hash+'><td>'+result.nombre+'</td><td>'+result.hash+'</td><td>'+(result.size/(1024*1024)).toFixed(2)+' MB</td><td><button type="button" class="btn btn-primary" onclick="mostrarPeers(\''+result.hash+'\')">Ver Peers</button></td></tr>');
+    $('#archivos > tbody > tr:last').after('<tr id='+result.hash+'peers></tr>');
 });
 
 socket.on('agregarArchivosReplicados',function(result){
   $('#archivos tbody').empty();
   $.each(result,function(index, archivos){
-    $('#archivos tr:last').after('<tr id='+result.hash+'><td>'+archivos.nombre+'</td><td>'+archivos.hash+'</td><td>'+(result.size/(1024*1024)).toFixed(2)+' MB</td><td><button type="button" class="btn btn-primary" onclick="mostrarPeers(\''+archivos.hash+'\')">Ver Peers</button></td></tr>');
-    $('#archivos tr:last').after('<tr id='+archivos.hash+'peers></tr>');
+    $('#archivos > tbody > tr:last').after('<tr id='+result.hash+'><td>'+archivos.nombre+'</td><td>'+archivos.hash+'</td><td>'+(result.size/(1024*1024)).toFixed(2)+' MB</td><td><button type="button" class="btn btn-primary" onclick="mostrarPeers(\''+archivos.hash+'\')">Ver Peers</button></td></tr>');
+    $('#archivos > tbody > tr:last').after('<tr id='+archivos.hash+'peers></tr>');
   });
 });
 

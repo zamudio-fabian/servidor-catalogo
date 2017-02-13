@@ -55,14 +55,18 @@ module.exports = function (server) {
     |   Balanceador
     |------------------------------------------------------------------------
     */
+    const SYNCDELAY = 2000;
+    const RECONNECTDELAY = 2000;
+    const RECONNECTIONS = 2;
     var reconnect = false;
     var balanceadorActual = 0;
+    var sync;
 
     function conexionBalanceador() {
       balanceadorSocket = client.connect('http://'+Config.get('balanceadores.ipBalanceadores')[balanceadorActual]+':'+Config.get('balanceadores.puertoBalanceadores')+'/catalogo', {
         'reconnection': true,
-        'reconnectionDelay': 2000,
-        'reconnectionAttempts': 2
+        'reconnectionDelay': RECONNECTDELAY,
+        'reconnectionAttempts': RECONNECTIONS
       });
     }
 
@@ -93,7 +97,13 @@ module.exports = function (server) {
       balanceadorSocket.on('connect', function(){
         log.info('Conexión balanceador - IP:'+Config.get('balanceadores.ipBalanceadores')[balanceadorActual]);
         co(function * () {
-          const cantidadPares = yield ParController.getCantidadParesConectados();
+          var cantidadPares = yield ParController.getCantidadParesConectados();
+          sync = setInterval(function(){
+            co(function * () {
+             var cantidadParesSync = yield ParController.getCantidadParesConectados();
+             balanceadorSocket.emit('syncPares', cantidadParesSync);
+             })
+           }, SYNCDELAY);
           balanceadorSocket.emit('addCatalogo',{'port':Env.get('PORT'),'pares':cantidadPares});
           if (!reconnect) {
             replicacionCompleta();
@@ -117,6 +127,7 @@ module.exports = function (server) {
       });
 
       balanceadorSocket.on('disconnect', function(){
+        clearInterval(sync);
         log.err('Desconexión balanceador - IP:'+Config.get('balanceadores.ipBalanceadores')[balanceadorActual]);
         reconnect = true;
       });
@@ -215,32 +226,19 @@ module.exports = function (server) {
       socket.on('sendEliminarArchivosPorPar',function(){
         var ip = socket.request.connection.remoteAddress;
         co(function * () {
-          yield CatalogoController.truncateFilesByPar(ip);
-        })
-        .catch(console.error);
-      });
-
-      socket.on('eliminarArchivo', function(hash){
-        var result;
-        var ip = socket.request.connection.remoteAddress;
-        co(function * () {
-          result = yield CatalogoController.eliminarArchivo(ip, hash);
-          if (result != 0) {
-            log.info('Eliminar Archivo - IP:'+ip+' Hash:'+hash);
-            if (result == 1) {
-              catalogoRoom.emit('eliminarArchivoVista',hash);
+          var result = yield CatalogoController.truncateFilesByPar(ip);
+          for (var i in result) {
+            catalogoRoom.emit('eliminarArchivoVista',result[i]);
+          }
+          log.info('Eliminar Archivo - IP:'+ip);
+          getOtrosCatalogos(function(otrosCatalogos) {
+            for (var i in otrosCatalogos) {
+              var otroCatalogoSocket = client.connect('http://'+otrosCatalogos[i].ip+':'+Env.get('PORT')+'/otrosCatalogos');
+              otroCatalogoSocket.emit('replicacionEliminarArchivosPorPar', ip);
+              log.info('Replicación Eliminar Archivo - IP:'+ip+' a Catálogo:'+otrosCatalogos[i].ip);
             }
-            getOtrosCatalogos(function(otrosCatalogos) {
-              for (var i in otrosCatalogos) {
-                var otroCatalogoSocket = client.connect('http://'+otrosCatalogos[i].ip+':'+Env.get('PORT')+'/otrosCatalogos');
-                otroCatalogoSocket.emit('replicacionEliminarArchivo', ip, hash);
-                log.info('Replicación eliminar archivo - IP:'+ip+' Hash:'+hash);
-              }
-            });
-          }
-          else {
-            log.err('Eliminar Archivo Inexsistente - IP:'+ip+' Hash:'+hash);
-          }
+          });
+          socket.emit('sendEliminarArchivosPorParOk');
         })
         .catch(console.error);
       });
@@ -255,17 +253,17 @@ module.exports = function (server) {
         .catch(console.error);
       });
 
-      socket.on('getParesArchivo', function(id){
-        log.info('Pedido de pares de un archivo - IP:'+socket.request.connection.remoteAddress+' Id:'+id);
+      socket.on('getParesArchivo', function(hash){
+        log.info('Pedido de pares de un archivo - IP:'+socket.request.connection.remoteAddress+' Hash:'+hash);
         var result;
         var fileToFind;
         co(function * () {
           console.log('Buscamos archivo');
-          fileToFind = yield CatalogoController.getArchivoByHash(id);
+          fileToFind = yield CatalogoController.getArchivoByHash(hash);
           console.log('Buscamos pares');
-          result = yield CatalogoController.getParesArchivo(id,socket.request.connection.remoteAddress);
+          result = yield CatalogoController.getParesArchivo(hash,socket.request.connection.remoteAddress);
           socket.emit('listadoPares', {peers:result,file:fileToFind});
-          log.info('Pares para archivo HASH='+id);
+          log.info('Pares para archivo HASH='+hash);
           log.info(result);
         })
         .catch(console.error);
@@ -339,15 +337,13 @@ module.exports = function (server) {
         .catch(console.error);
       });
 
-      socket.on('replicacionEliminarArchivo', function(ip, hash){
+      socket.on('replicacionEliminarArchivosPorPar', function(ip){
         var result
         co(function * () {
-          result = yield CatalogoController.eliminarArchivo(ip, hash);
-          if (result != 0) {
-            log.info('Eliminar Archivo - IP:'+ip+' Hash:'+hash);
-            if (result == 1) {
-              catalogoRoom.emit('eliminarArchivoVista',hash);
-            }
+          var result = yield CatalogoController.truncateFilesByPar(ip);
+          log.info('Eliminar Archivo - IP:'+ip);
+          for (var i in result) {
+            catalogoRoom.emit('eliminarArchivoVista',result[i]);
           }
         })
         .catch(console.error);
