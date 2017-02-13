@@ -257,7 +257,7 @@ module.exports = function (server) {
         .catch(console.error);
       });
 
-      socket.on('getParesArchivo', function(hash,first_time){
+      socket.on('getParesArchivo', function(hash,first_time = false){
         console.log(first_time);
         log.info('Pedido de pares de un archivo - IP:'+socket.request.connection.remoteAddress+' Hash:'+hash);
         var result;
