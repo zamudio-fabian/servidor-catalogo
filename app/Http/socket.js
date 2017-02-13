@@ -195,24 +195,28 @@ module.exports = function (server) {
         .catch(console.error);
       });
 
-      socket.on('nuevoArchivo', function(archivo){
+      socket.on('nuevoArchivo', function(archivo, se_elimino){
         var result
         var ip = socket.request.connection.remoteAddress;
         co(function * () {
           result = yield CatalogoController.nuevoArchivo(ip, archivo);
           if (result == 0 || result == 1) {
             if (result == 0) {
-              log.info('Nuevo Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
+              if (!se_elimino) {
+                log.info('Nuevo Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
+              }
               catalogoRoom.emit('nuevoArchivoVista',archivo);
             }
-            if (result == 1) {
+            if (result == 1 && !se_elimino) {
               log.info('Nuevo Par para Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
             }
             getOtrosCatalogos(function(otrosCatalogos) {
               for (var i in otrosCatalogos) {
                 var otroCatalogoSocket = client.connect('http://'+otrosCatalogos[i].ip+':'+Env.get('PORT')+'/otrosCatalogos');
-                otroCatalogoSocket.emit('replicacionNuevoArchivo', ip, archivo);
-                log.info('Replicación nuevo archivo - IP:'+ip+' Nombre:'+archivo.nombre+' a Catálogo:'+otrosCatalogos[i].ip);
+                otroCatalogoSocket.emit('replicacionNuevoArchivo', ip, archivo, se_elimino);
+                if (!se_elimino) {
+                  log.info('Replicación nuevo archivo - IP:'+ip+' Nombre:'+archivo.nombre+' a Catálogo:'+otrosCatalogos[i].ip);
+                }
               }
             });
           }
@@ -320,16 +324,18 @@ module.exports = function (server) {
         .catch(console.error);
       });
 
-      socket.on('replicacionNuevoArchivo', function(ip, archivo){
+      socket.on('replicacionNuevoArchivo', function(ip, archivo, se_elimino){
         var result;
         co(function * () {
           result = yield CatalogoController.nuevoArchivo(ip, archivo);
           if (result == 0 || result == 1) {
             if (result == 0) {
-              log.info('Nuevo Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
+              if (!se_elimino) {
+                log.info('Nuevo Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
+              }
               catalogoRoom.emit('nuevoArchivoVista',archivo);
             }
-            if (result == 1) {
+            if (result == 1 && !se_elimino) {
               log.info('Nuevo Par para Archivo - IP:'+ip+'  Nombre:'+archivo.nombre+' Hash:'+archivo.hash);
             }
           }
