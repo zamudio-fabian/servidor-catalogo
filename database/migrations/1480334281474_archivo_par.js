@@ -7,8 +7,8 @@ class ArchivoParTableSchema extends Schema {
   up () {
     this.create('archivo_par', (table) => {
       table.increments()
-      table.integer('archivo_hash')
-      table.integer('par_ip')
+      table.integer('archivo_id')
+      table.integer('par_id')
       table.timestamps()
     })
   }

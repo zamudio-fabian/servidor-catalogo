@@ -92,9 +92,26 @@ class CatalogoController {
           hash: archivos[i].hash, size:archivos[i].size})
           .into('archivos')
       }
+
       for (var i in archivoPar) {
-        yield trx.insert({archivo_id: archivoPar[i].archivo_id,
-          par_id: archivoPar[i].par_id})
+        var parDump = null;
+        var archivoDump = null;
+        
+        for (var j in pares) {
+            if(archivoPar[i].par_id == pares[j].id){
+                parDump = pares[j];
+            }
+        }
+
+        for (var f in archivos) {
+            if(archivoPar[i].archivo_id == archivos[f].id){
+                archivoDump = archivos[f];
+            }
+        }
+        const archivoBuscado = yield Archivo.findBy('hash', archivoDump.hash)
+        const parBuscado = yield Par.findBy('ip', parDump.ip)
+        yield trx.insert({archivo_id: archivoBuscado.id,
+          par_id: parBuscado.id})
           .into('archivo_par')
       }
     })

@@ -9,7 +9,7 @@ class Archivo extends Lucid {
   }
 
   pares () {
-    return this.belongsToMany('App/Model/Par','archivo_par', 'hash', 'archivo_hash')
+    return this.belongsToMany('App/Model/Par')
   }
 
 }
