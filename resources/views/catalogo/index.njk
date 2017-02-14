@@ -150,6 +150,7 @@ socket.on('agregarParesReplicados',function(result){
 socket.on('eliminarPar',function(parIp){
   $('[id="'+parIp+'"]').remove();
 });
+
 socket.on('eliminarArchivoVista',function(hash){
   $('[id="'+hash+'"]').remove();
   $('[id="'+hash+'peers"]').remove();

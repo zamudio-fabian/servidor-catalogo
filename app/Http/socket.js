@@ -183,7 +183,7 @@ module.exports = function (server) {
         co(function * () {
           const result = yield ParController.nuevaConexion(ip, puerto, Env.get('HOST'));
           if(result.nuevo){
-            catalogoRoom.emit('agregarPar', result);
+            catalogoRoom.emit('agregarPar', result.instancia);
             balanceadorSocket.emit('addParToCatalogo');
             getOtrosCatalogos(function(otrosCatalogos) {
               for (var i in otrosCatalogos) {
@@ -193,7 +193,7 @@ module.exports = function (server) {
               }
             });
           }else{
-            catalogoRoom.emit('modificarPar', result);
+            catalogoRoom.emit('modificarPar', result.instancia);
             balanceadorSocket.emit('addParToCatalogo');
             getOtrosCatalogos(function(otrosCatalogos) {
               for (var i in otrosCatalogos) {
