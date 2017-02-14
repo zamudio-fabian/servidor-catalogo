@@ -257,18 +257,17 @@ module.exports = function (server) {
         .catch(console.error);
       });
 
-      socket.on('getParesArchivo', function(hash,first_time = false){
-        console.log(first_time);
-        log.info('Pedido de pares de un archivo - IP:'+socket.request.connection.remoteAddress+' Hash:'+hash);
+      socket.on('getParesArchivo', function(data){
+        log.info('Pedido de pares de un archivo - IP:'+socket.request.connection.remoteAddress+' Hash:'+data.hash);
         var result;
         var fileToFind;
         co(function * () {
           console.log('Buscamos archivo');
-          fileToFind = yield CatalogoController.getArchivoByHash(hash);
+          fileToFind = yield CatalogoController.getArchivoByHash(data.hash);
           console.log('Buscamos pares');
-          result = yield CatalogoController.getParesArchivo(hash,socket.request.connection.remoteAddress);
-          socket.emit('listadoPares', {peers:result,file:fileToFind,first_time:first_time});
-          log.info('Pares para archivo HASH='+hash);
+          result = yield CatalogoController.getParesArchivo(data.hash,socket.request.connection.remoteAddress);
+          socket.emit('listadoPares', {peers:result,file:fileToFind,first_time:data.first_time});
+          log.info('Pares para archivo HASH='+data.hash);
           log.info(result);
         })
         .catch(console.error);
