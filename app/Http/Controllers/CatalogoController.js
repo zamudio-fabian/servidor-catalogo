@@ -89,7 +89,7 @@ class CatalogoController {
       }
       for (var i in archivos) {
         yield trx.insert({nombre: archivos[i].nombre,
-          hash: archivos[i].hash})
+          hash: archivos[i].hash, size:archivos[i].size})
           .into('archivos')
       }
       for (var i in archivoPar) {
