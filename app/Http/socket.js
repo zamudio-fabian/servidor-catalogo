@@ -182,28 +182,15 @@ module.exports = function (server) {
         var puerto = socket.request.connection.remotePort;
         co(function * () {
           const result = yield ParController.nuevaConexion(ip, puerto, Env.get('HOST'));
-          if(result.nuevo){
-            catalogoRoom.emit('agregarPar', result.instancia);
-            balanceadorSocket.emit('addParToCatalogo');
-            getOtrosCatalogos(function(otrosCatalogos) {
-              for (var i in otrosCatalogos) {
-                var otroCatalogoSocket = client.connect('http://'+otrosCatalogos[i].ip+':'+Env.get('PORT')+'/otrosCatalogos');
-                otroCatalogoSocket.emit('replicacionNuevaConexion', ip, puerto, Env.get('HOST'));
-                log.info('Replicación par conectado - IP:'+ip+' a Catálogo:'+otrosCatalogos[i].ip);
-              }
-            });
-          }else{
-            catalogoRoom.emit('modificarPar', result.instancia);
-            balanceadorSocket.emit('addParToCatalogo');
-            getOtrosCatalogos(function(otrosCatalogos) {
-              for (var i in otrosCatalogos) {
-                var otroCatalogoSocket = client.connect('http://'+otrosCatalogos[i].ip+':'+Env.get('PORT')+'/otrosCatalogos');
-                otroCatalogoSocket.emit('replicacionUpdateConexion', ip, puerto, Env.get('HOST'));
-                log.info('Replicación par actualizado - IP:'+ip+' a Catálogo:'+otrosCatalogos[i].ip);
-              }
-            });
-          }
-          
+          catalogoRoom.emit('agregarPar', result);
+          balanceadorSocket.emit('addParToCatalogo');
+          getOtrosCatalogos(function(otrosCatalogos) {
+            for (var i in otrosCatalogos) {
+              var otroCatalogoSocket = client.connect('http://'+otrosCatalogos[i].ip+':'+Env.get('PORT')+'/otrosCatalogos');
+              otroCatalogoSocket.emit('replicacionNuevaConexion', ip, puerto, Env.get('HOST'));
+              log.info('Replicación par conectado - IP:'+ip+' a Catálogo:'+otrosCatalogos[i].ip);
+            }
+          });
         })
         .catch(console.error);
       });
@@ -333,15 +320,6 @@ module.exports = function (server) {
         co(function * () {
           var nuevo = yield ParController.nuevaConexion(ip, puerto, catalogo);
           catalogoRoom.emit('agregarPar', nuevo);
-        })
-        .catch(console.error);
-      });
-
-      socket.on('replicacionUpdateConexion', function(ip, puerto, catalogo){
-        log.info('Conexión Replicada - IP:'+ip+' de Catálogo:'+socket.request.connection.remoteAddress);
-        co(function * () {
-          var nuevo = yield ParController.nuevaConexion(ip, puerto, catalogo);
-          catalogoRoom.emit('updatePar', nuevo);
         })
         .catch(console.error);
       });

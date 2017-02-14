@@ -133,12 +133,9 @@ socket.on('eliminarArchivoVista',function(hash){
 });
 
 socket.on('agregarPar',function(par){
-  $('#pares tr:last').after('<tr id='+par.ip+'><td>'+par.ip+'</td><td>'+par.puerto+'</td><td id="catalogo">'+par.catalogo_conectado+'</td></tr>');
+  $('#pares tr:last').after('<tr id='+par.ip+'><td>'+par.ip+'</td><td>'+par.puerto+'</td><td >'+par.catalogo_conectado+'</td></tr>');
 });
 
-socket.on('updatePar',function(par){
-  $('#'+par.ip+' #catalogo').html(par.catalogo_conectado);
-});
 
 socket.on('agregarParesReplicados',function(result){
   $('#pares tbody').empty();
