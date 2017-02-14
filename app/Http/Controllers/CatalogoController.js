@@ -92,8 +92,9 @@ class CatalogoController {
           hash: archivos[i].hash, size:archivos[i].size})
           .into('archivos')
       }
+    })
 
-      for (var i in archivoPar) {
+    for (var i in archivoPar) {
         var parDump = null;
         var archivoDump = null;
         
@@ -110,11 +111,12 @@ class CatalogoController {
         }
         const archivoBuscado = yield Archivo.findBy('hash', archivoDump.hash)
         const parBuscado = yield Par.findBy('ip', parDump.ip)
-        yield trx.insert({archivo_id: archivoBuscado.id,
-          par_id: parBuscado.id})
-          .into('archivo_par')
+        yield Database.transaction(function * (trx) {
+          yield trx.insert({archivo_id: archivoBuscado.id,
+            par_id: parBuscado.id})
+            .into('archivo_par')
+        });
       }
-    })
   }
 
   * getDbArchivos(){
