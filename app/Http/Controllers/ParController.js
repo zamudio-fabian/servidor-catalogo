@@ -17,15 +17,19 @@ class ParController {
   }
 
   * nuevaConexion (ip, puerto, catalogo){
+    const instanciaPar = new Par()
     const par = yield Par.findBy('ip', ip)
     if(par == null) {
-      const par = new Par()
+      instanciaPar.ip = ip
+      instanciaPar.puerto = puerto
+      instanciaPar.catalogo_conectado = catalogo
+      yield instanciaPar.save()
+      return {instancia:instanciaPar,nuevo:true}
+    }else{
+      instanciaPar.catalogo_conectado = catalogo
+      yield instanciaPar.save()
+      return {instancia:instanciaPar,nuevo:false}
     }
-    par.ip = ip
-    par.puerto = puerto
-    par.catalogo_conectado = catalogo
-    yield par.save()
-    return par
   }
 
   * getDbPares(){
